@@ -4,9 +4,7 @@ use strict;
 use warnings;
 use base qw/ DBIx::Class /;
 
-use Data::Dumper;
-
-our $VERSION = '0.01';
+our $VERSION = '0.01001';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -14,7 +12,7 @@ __PACKAGE__->mk_classdata('slave_connection');
 
 =head1 NAME
 
-DBIx::Class::Schema::Slave - L<DBIx::Class::Schema> for slave (EXPERIMENTAL)
+DBIx::Class::Schema::Slave - L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>
 
 =head1 SYNOPSIS
 
@@ -140,7 +138,7 @@ You can either create a new record or remove some rows from master. But you can 
       title       => $title || undef,
       time        => $time || undef,
   } );
-  $track->title('さっきの女の子');
+  $track->title('WORLD\'S END SUPERNOVA');
   $track->update;
   $track->delete;
 
@@ -154,7 +152,7 @@ You can either create a new record or remove some rows from master. But you can 
       time        => $time || undef,
   } );
 
-  $track->title('プリキュア５、スマイルgo go!');
+  $track->title('TEAM ROCK');
   # You got an error!
   # DBIx::Class::ResultSet::update(): Can't update via result source "Track::Slave". This is slave connection.
   $track->update;
@@ -176,7 +174,7 @@ Moniker for slave. C<::Slave> default.
   __PACKAGE__->slave_moniker('::Slave');
 
 B<IMPORTANT:>
-If you have already MyApp::Schema::Artist::Slave, DO NOT set C<::Slave> to C<slave_moniker>.
+If you have already MyApp::Schema::Artist::Slave, B<DO NOT> set C<::Slave> to C<slave_moniker>.
 Set C<::SlaveFor> or something else.
 
 =head2 slave_connect_info
@@ -456,7 +454,7 @@ sub _select_connect_info {
           ? $self->select_connect_info
           : $self->slave_connect_info->[ rand @{$self->slave_connect_info} ];
            
-      warn "Select slave_connect_info @{$info}\n";
+#      warn "Select slave_connect_info @{$info}\n";
       return $info;
 }
 

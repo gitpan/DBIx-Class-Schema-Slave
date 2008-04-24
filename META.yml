@@ -1,11 +1,11 @@
 ---
-abstract: 'L<DBIx::Class::Schema> for slave (EXPERIMENTAL)'
+abstract: 'L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>'
 author:
   - 'travail <travail@cabane.no-ip.org>'
 build_requires:
   Test::More: 0
 distribution_type: module
-generated_by: 'Module::Install version 0.71'
+generated_by: 'Module::Install version 0.72'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
@@ -18,4 +18,4 @@ no_index:
 requires:
   DBIx::Class: 0
   DBIx::Class::Schema: 0
-version: 0.01
+version: 0.01001

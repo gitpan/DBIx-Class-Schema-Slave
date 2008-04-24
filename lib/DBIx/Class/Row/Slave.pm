@@ -2,11 +2,13 @@ package DBIx::Class::Row::Slave;
 
 use base qw/ DBIx::Class /;
 
+our $VERSION = '0.01001';
+
 __PACKAGE__->mk_classdata( slave_moniker => DBIx::Class::Schema::Slave->slave_moniker );
 
 =head1 NAME
 
-DBIx::Class::Row::Slave - L<DBIx::Class::Row> for slave (EXPERIMENTAL)
+DBIx::Class::Row::Slave - L<DBIx::Class::Row> for slave B<(EXPERIMENTAL)>
 
 =head1 SYNOPSIS
 
@@ -36,7 +38,7 @@ DBIx::Class::Row::Slave - L<DBIx::Class::Row> for slave (EXPERIMENTAL)
   my $slave = $schema->resultset('Artist::Slave')->create( { ... } );
 
   # Also you can neither update nor delete via slave result_sources.
-  my $slave = $schema->resultset('Artist::Slave')->single( { name => 'くるり' } );
+  my $slave = $schema->resultset('Artist::Slave')->single( { name => 'QURULI' } );
   $slave->name('RADIOHEAD');
 
   # DBIx::Class::ResultSet::update(): Can't update via result source "Artist::Slave". This is slave connection.
