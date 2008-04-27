@@ -34,7 +34,7 @@ DBIx::Class::Row::Slave - L<DBIx::Class::Row> for slave B<(EXPERIMENTAL)>
 
   # Adding in slave
   # You got an error!
-  # DBIx::Class::ResultSet::create(): Can't update via result source "Artist::Slave". This is slave connection.
+  # DBIx::Class::ResultSet::create(): Can't insert via result source "Artist::Slave". This is slave connection.
   my $slave = $schema->resultset('Artist::Slave')->create( { ... } );
 
   # Also you can neither update nor delete via slave result_sources.

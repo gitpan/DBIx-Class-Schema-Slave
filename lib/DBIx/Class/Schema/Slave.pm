@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw/ DBIx::Class /;
 
-our $VERSION = '0.01001';
+our $VERSION = '0.01100';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
