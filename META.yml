@@ -18,4 +18,4 @@ no_index:
 requires:
   DBIx::Class: 0
   DBIx::Class::Schema: 0
-version: 0.01100
+version: 0.01101

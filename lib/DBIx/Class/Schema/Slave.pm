@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use base qw/ DBIx::Class /;
 
-our $VERSION = '0.01100';
+our $VERSION = '0.01101';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -93,7 +93,7 @@ I recommend every C<result_source> classes to be loaded.
   # Every result_source classes are loaded
   __PACKAGE__->load_classes;
 
-Next, load L<DBIx::Class::Row::Slave> as component into your C<result_source> classes.
+Next, load L<DBIx::Class::Row::Slave> as component in your C<result_source> classes.
 
   # In your MyApp::Schema::Artist;
   package MyApp::Schema::Artist;

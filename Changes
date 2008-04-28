@@ -1,8 +1,12 @@
 Revision history for Perl extension DBIx::Class::Schema::Slave
 
-0.01100  Tue Apr 28 01:58:23 2008
+0.01101  Mon Apr 28 17:19:50 2008
+        - Removed Version from lib/DBIx/Class/Row/Slave.pm
+        - Tweaked POD
+
+0.01100  Mon Apr 28 01:58:23 2008
         - Added many tests
-        - These tests DBD::SQLite
+        - These tests need DBD::SQLite
 
 0.01001  Tue Apr 25 03:29:41 2008
         - Modified document
