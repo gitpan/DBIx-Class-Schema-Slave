@@ -9,7 +9,7 @@ BEGIN {
     eval "use DBD::SQLite";
     plan $@
         ? ( skip_all => 'needs DBD::SQLite for testing' )
-        : ( tests => 716 );
+        : ( tests => 1352 );
 }
 
 my $schema = DBICTest->init_schema;

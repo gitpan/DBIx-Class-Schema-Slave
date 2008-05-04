@@ -5,7 +5,7 @@ use warnings;
 use base qw/ DBIx::Class /;
 use Clone qw/ clone /;
 
-our $VERSION = '0.02000';
+our $VERSION = '0.02100';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -264,6 +264,8 @@ Connection for slave stored. You can get this by L</slave>.
 
 =item Arguments: $moniker, $result_source
 
+=item Return Value: none
+
 =back
 
 Registers the L<DBIx::Class::ResultSource> in the schema with the given moniker
@@ -357,6 +359,9 @@ sub _clone_source {
 If C<$moniker> is slave moniker, this method returns C<$result_set> for slave.
 See L<DBIx::Class::Schema/"resultset">.
 
+  my $master_rs = $schema->resultset('Artist');
+  my $slave_rs  = $schema->resultset('Artist::Slave');
+
 =cut
 
 sub resultset {
@@ -384,6 +389,8 @@ sub resultset {
 
 =over 4
 
+=item Argunemts: none
+
 =item Return Value: @sources
 
 =back
@@ -407,6 +414,8 @@ sub sources {
 
 =over 4
 
+=item Argunemts: none
+
 =item Return Value: @sources
 
 =back
@@ -427,6 +436,8 @@ sub master_sources {
 =head2 slave_sources
 
 =over 4
+
+=item Argunemts: none
 
 =item Return Value: @sources
 
@@ -460,11 +471,7 @@ Usualy, you don't have to call it directry.
 
 =cut
 
-sub connect_slave {
-    my $self = shift;
-
-    $self->slave_connection( $self->connect( @_ ) );
-}
+sub connect_slave { $_[0]->slave_connection( shift->connect( @_ ) ) }
 
 =head2 slave
 
@@ -480,6 +487,8 @@ sub slave { shift->slave_connection }
 =head2 select_connect_info
 
 =over 4
+
+=item Argunemts: none
 
 =item Return Value: $connect_info
 
@@ -525,7 +534,7 @@ This method returns 1 if C<$string> (moniker, class name and so on) is slave stu
   $self->is_slave('Artist::Slave');
 
   # Returns 1
-  $self->is_slave('MyApp::Model::DBIC::Artist::Slave');
+  $self->is_slave('MyApp::Model::DBIC::MyApp::Artist::Slave');
 
   __PACKAGE__->slave_moniker('::SlaveFor');
 
@@ -536,7 +545,7 @@ This method returns 1 if C<$string> (moniker, class name and so on) is slave stu
   $self->is_slave('Artist::SlaveFor');
 
   # Returns 1
-  $self->is_slave('MyApp::Model::DBIC::Artist::SlaveFor');
+  $self->is_slave('MyApp::Model::DBIC::MyApp::Artist::SlaveFor');
 
 =cut
 
@@ -579,7 +588,7 @@ sub _select_connect_info {
 
 =head1 AUTHOR
 
-travail <travail@cabane.no-ip.org>
+travail C<travail@cabane.no-ip.org>
 
 =head1 COPYRIGHT
 

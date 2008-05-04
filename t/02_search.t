@@ -4,13 +4,13 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
-use DBICTest::Constants qw/ COUNT_ALL /;
+use DBICTest::Constants;
 
 BEGIN {
     eval "use DBD::SQLite";
     plan $@
         ? ( skip_all => 'needs DBD::SQLite for testing' )
-        : ( tests => 716 );
+        : ( tests => 1352 );
 }
 
 my $schema = DBICTest->init_schema;

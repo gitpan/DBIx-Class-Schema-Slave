@@ -32,17 +32,17 @@ DBIx::Class::Row::Slave - L<DBIx::Class::Row> for slave B<(EXPERIMENTAL)>
 
   # Adding in slave
   # You got an error!
-  # DBIx::Class::ResultSet::create(): Can't insert via result source "Artist::Slave". This is slave connection.
+  # DBIx::Class::Row::Slave::create(): Can't insert via result source "Artist::Slave". This is slave connection.
   my $slave = $schema->resultset('Artist::Slave')->create( { ... } );
 
   # Also you can neither update nor delete via slave result_sources.
   my $slave = $schema->resultset('Artist::Slave')->single( { name => 'QURULI' } );
   $slave->name('RADIOHEAD');
 
-  # DBIx::Class::ResultSet::update(): Can't update via result source "Artist::Slave". This is slave connection.
+  # DBIx::Class::Row::Slave::update(): Can't update via result source "Artist::Slave". This is slave connection.
   $slave->update;
 
-  # DBIx::Class::ResultSet::delete(): Can't delete via result source "Artist::Slave". This is slave connection.
+  # DBIx::Class::Row::Slave::delete(): Can't delete via result source "Artist::Slave". This is slave connection.
   $slave->delete;
 
   
@@ -125,22 +125,19 @@ This method returns C<1> if the row is retrieved via slave C<result_source>, oth
 
 =cut
 
-sub is_slave {
-    my $self = shift;
-
-    my $source_name   = $self->result_source->source_name;
-    my $slave_moniker = $self->slave_moniker;
-    return $source_name =~ m/$slave_moniker$/o ? 1 : 0;
-}
+sub is_slave { $_[0]->_source_handle->schema->is_slave( $_[0]->result_source->source_name ) }
 
 =head1 AUTHOR
 
-travail, C<travail@cabane.no-ip.org>
+travail C<travail@cabane.no-ip.org>
 
 =head1 COPYRIGHT
 
-This program is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+The full text of the license can be found in the
+LICENSE file included with this module.
 
 =cut
 

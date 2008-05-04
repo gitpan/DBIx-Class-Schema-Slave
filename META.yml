@@ -1,7 +1,7 @@
 ---
 abstract: 'L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>'
 author:
-  - 'travail <travail@cabane.no-ip.org>'
+  - 'travail C<travail@cabane.no-ip.org>'
 build_requires:
   Test::More: 0
 distribution_type: module
@@ -19,4 +19,4 @@ requires:
   Clone: 0
   DBIx::Class: 0
   DBIx::Class::Schema: 0
-version: 0.02000
+version: 0.02100
