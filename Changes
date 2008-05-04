@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::Class::Schema::Slave
 
+0.02101  Mon May 5 03:56:34 2008
+        - Tweaked POD
+
 0.02100  Mon May 5 03:00:18 2008
         - Modified method DBIx::Class::Row::Slave::is_slave
         - Tweaked some tests

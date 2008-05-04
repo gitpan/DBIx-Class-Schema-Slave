@@ -5,7 +5,7 @@ use warnings;
 use base qw/ DBIx::Class /;
 use Clone qw/ clone /;
 
-our $VERSION = '0.02100';
+our $VERSION = '0.02101';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -53,7 +53,7 @@ DBIx::Class::Schema::Slave - L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>
           ...
           ...
           ...
-          Row::Slave # DO NOT forget to load
+          Row::Slave # DO NOT forget to specify
           Core
       / ],
   );
@@ -93,7 +93,7 @@ First, you should load DBIx::Class::Schema::Slave as component in your MyApp::Sc
 
   __PACKAGE__->load_components( qw/ Schema::Slave / );
 
-Set L</slave_moniker> as you like.
+Set L</slave_moniker> as you like. If you do not specify, C<::Slave> is set.
 
   __PACKAGE__->slave_moniker('::Slave');
 
@@ -115,7 +115,8 @@ MyApp::Schema::Artist::Slave, MyApp::Schema::Album::Slave and MyApp::Schema::Tra
 If you set C<::MySlave> to L</slave_moniker>, it creates
 MyApp::Schema::Artist::MySlave, MyApp::Schema::Album::MySlave and MyApp::Schema::Track::MySlave.
 
-  # MyApp::Schema::Artist, MyApp::Schema::Artist::Slave wouldn't be created
+  # MyApp::Schema::Artist wouldn't be loaded
+  # MyApp::Schema::Artist::Slave wouldn't be created
   __PACKAGE__->load_classes( qw/ Album Track / );
 
 I recommend every C<result_source> classes to be loaded.
@@ -131,7 +132,6 @@ Next, load L<DBIx::Class::Row::Slave> as component in your C<result_source> clas
   use base 'DBIx::Class';
 
   __PACKEAGE__->load_components( qw/ ... Row::Slave Core / );
-  # Some definitions or methods go on
 
 =head2 Using L<DBIx::Class::Schema::Loader>
 
@@ -145,7 +145,7 @@ First, you should load DBIx::Class::Schema::Slave as component in your MyApp::Sc
 
   __PACKAGE__->load_components( qw/ Schema::Slave / );
 
-Set L</slave_moniker> as you like.
+Set L</slave_moniker> as you like. If you do not specify, C<::Slave> is set.
 
   __PACKAGE__->slave_moniker('::Slave');
 

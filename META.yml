@@ -19,4 +19,4 @@ requires:
   Clone: 0
   DBIx::Class: 0
   DBIx::Class::Schema: 0
-version: 0.02100
+version: 0.02101
