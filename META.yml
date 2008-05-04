@@ -16,6 +16,7 @@ no_index:
     - inc
     - t
 requires:
+  Clone: 0
   DBIx::Class: 0
   DBIx::Class::Schema: 0
-version: 0.01101
+version: 0.02000

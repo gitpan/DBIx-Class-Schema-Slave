@@ -15,7 +15,7 @@ BEGIN {
 my $schema = DBICTest->init_schema;
 my $cursor_class = 'DBIx::Class::Storage::DBI::Cursor';
 
-## find from master artist
+## master
 my $m_itr_artist = $schema->resultset('Artist')->search;
 my $m_artist_cursor = $m_itr_artist->cursor;
 is(ref $m_artist_cursor,$cursor_class,'master artist "cursor"');
@@ -28,7 +28,7 @@ my $m_itr_track = $schema->resultset('Track')->search;
 my $m_track_cursor = $m_itr_track->cursor;
 is(ref $m_track_cursor,$cursor_class,'master track "cursor"');
 
-## find from slave artist
+## slave
 my $s_itr_artist = $schema->resultset('Artist::Slave')->search;
 my $s_artist_cursor = $s_itr_artist->cursor;
 is(ref $s_artist_cursor,$cursor_class,'slave artist "cursor"');

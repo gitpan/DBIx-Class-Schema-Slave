@@ -17,7 +17,7 @@ my $artist_name = 'Spangle call Lilli line';
 my $cd_title = 'TRACE';
 my $track_title = 'R.G.B.';
 
-## find from master artist
+## master
 my $m_artist = $schema->resultset('Artist')->search_like({name => '%call%'},{order_by => 'artistid ASC'})->first;
 is($m_artist->is_slave,0,'master artist "search_like"');
 is($m_artist->name,$artist_name,'master artist "search_like"');
@@ -30,7 +30,7 @@ my $m_track = $schema->resultset('Track')->search_like({'title' => '%B.'},{order
 is($m_track->is_slave,0,'master track "search_like"');
 is($m_track->title,$track_title,'master track "search_like"');
 
-## find from slave artist
+## slave
 my $s_artist = $schema->resultset('Artist::Slave')->search_like({name => '%call%'},{order_by => 'artistid ASC'})->first;
 is($s_artist->is_slave,1,'slave artist "search_like"');
 is($s_artist->name,$artist_name,'slave artist "search_like"');

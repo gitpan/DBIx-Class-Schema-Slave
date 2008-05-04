@@ -4,15 +4,17 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
+use DBICTest::Constants qw/ THROW_EXCEPTION_MESSAGE /;
 
 BEGIN {
     eval "use DBD::SQLite";
     plan $@
         ? ( skip_all => 'needs DBD::SQLite for testing' )
-        : ( tests => 16 );
+        : ( tests => 40 );
 }
 
 my $schema = DBICTest->init_schema;
+my $message = THROW_EXCEPTION_MESSAGE;
 
 ## master
 my $itr_m_artist = $schema->resultset('Artist')->search;
@@ -32,8 +34,8 @@ while ( my $m_cd = $itr_m_cd->next ) {
 ## slave
 my $itr_s_artist = $schema->resultset('Artist::Slave')->search;
 eval{$itr_s_artist->update_all({name => 'UPDATE_ALL'})};
-like($@,qr/DBIx::Class::ResultSet::update_all()/,'slave artist "update_all"');
+like($@,qr/$message/,'slave artist "update_all"');
 
 my $itr_s_cd = $schema->resultset('CD::Slave')->search;
 eval{$itr_s_cd->update_all({year => 'UPDATE_ALL'})};
-like($@,qr/DBIx::Class::ResultSet::update_all()/,'slave artist "update_all"');
+like($@,qr/$message/,'slave artist "update_all"');

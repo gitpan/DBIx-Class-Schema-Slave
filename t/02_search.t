@@ -4,65 +4,56 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
+use DBICTest::Constants qw/ COUNT_ALL /;
 
 BEGIN {
     eval "use DBD::SQLite";
     plan $@
         ? ( skip_all => 'needs DBD::SQLite for testing' )
-        : ( tests => 228 );
+        : ( tests => 716 );
 }
 
 my $schema = DBICTest->init_schema;
 
-## search from master artist
+# master
 my @m_artist = $schema->resultset('Artist')->search;
 is($_->is_slave,0,'master artist "search"') foreach @m_artist;
-
 my $itr_m_artist = $schema->resultset('Artist')->search;
 while ( my $m_artist = $itr_m_artist->next ) {
     is($m_artist->is_slave,0,'master artist "search"');
 }
 
-## search from master cd
 my @m_cd = $schema->resultset('CD')->search;
 is($_->is_slave,0,'master cd "search"') foreach @m_cd;
-
 my $itr_m_cd = $schema->resultset('CD')->search;
 while ( my $m_cd = $itr_m_cd->next ) {
     is($m_cd->is_slave,0,'master cd "search"');
 }
 
-## search from master track
 my @m_track = $schema->resultset('Track')->search;
 is($_->is_slave,0,'master track "search"') foreach @m_track;
-
 my $itr_m_track = $schema->resultset('Track')->search;
 while ( my $m_track = $itr_m_track->next ) {
     is($m_track->is_slave,0,'master track "search"');
 }
 
-## search from slave artist
+# slave
 my @s_artist = $schema->resultset('Artist::Slave')->search;
 is($_->is_slave, 1, 'slave artist "search"') foreach @s_artist;
-
 my $itr_s_artist = $schema->resultset('Artist::Slave')->search;
 while ( my $s_artist = $itr_s_artist->next ) {
     is($s_artist->is_slave, 1, 'slave artist "search"');
 }
 
-## search from slave cd
 my @s_cd = $schema->resultset('CD::Slave')->search;
 is($_->is_slave, 1, 'slave cd "search"') foreach @s_cd;
-
 my $itr_s_cd = $schema->resultset('CD::Slave')->search;
 while ( my $s_cd = $itr_s_cd->next ) {
     is($s_cd->is_slave, 1, 'slave cd "search"');
 }
 
-## search from slave track
 my @s_track = $schema->resultset('Track::Slave')->search;
 is($_->is_slave, 1, 'slave track "search"') foreach @s_track;
-
 my $itr_s_track = $schema->resultset('Track::Slave')->search;
 while ( my $s_track = $itr_s_track->next ) {
     is($s_track->is_slave, 1, 'slave track "search"');

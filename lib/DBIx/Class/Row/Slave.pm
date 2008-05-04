@@ -117,10 +117,10 @@ This method returns C<1> if the row is retrieved via slave C<result_source>, oth
   my $master = $schema->resultset('Artist')->find( $id );
   my $slave  = $schema->resultset('Artist::Slave')->find( $id );
 
-  ## Returns 0
+  # Returns 0
   $master->is_slave;
 
-  ## Returns 1
+  # Returns 1
   $slave->is_slave;
 
 =cut

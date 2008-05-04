@@ -17,7 +17,7 @@ my $artist = 'Spangle call Lilli line';
 my $cd = 'TRACE';
 my $track = 'U-Lite';
 
-## find from master artist
+## master
 my $m_artist = $schema->resultset('Artist')->search({name => $artist},{order_by => 'artistid ASC'})->single;
 is( $m_artist->is_slave,0,'master artist "single"');
 is( $m_artist->name,$artist,'master artist "single"');
@@ -30,7 +30,7 @@ my $m_track = $schema->resultset('Track')->search({title => $track},{order_by =>
 is( $m_track->is_slave, 0, 'Single master artist');
 is( $m_track->title,$track,'master track "single"');
 
-## find from slave artist
+## slave
 my $s_artist = $schema->resultset('Artist::Slave')->search({name => $artist},{order_by => 'artistid ASC'})->single;
 is( $s_artist->is_slave, 1, 'Single slave artist');
 is( $s_artist->name,$artist,'slave artist "single"');

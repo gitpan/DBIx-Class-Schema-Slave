@@ -15,7 +15,7 @@ BEGIN {
 my $schema = DBICTest->init_schema;
 my $result_source_class = 'DBIx::Class::ResultSource::Table';
 
-## find from master artist
+## master
 my $m_artist_result_source = $schema->resultset('Artist')->result_source;
 is(ref $m_artist_result_source,$result_source_class,'master artist "result_source"');
 
@@ -25,7 +25,7 @@ is(ref $m_cd_result_source,$result_source_class,'master cd "result_source"');
 my $m_track_result_source = $schema->resultset('Track')->result_source;
 is(ref $m_track_result_source,$result_source_class,'master track "result_source"');
 
-## find from slave artist
+## slave
 my $s_artist_result_source = $schema->resultset('Artist::Slave')->result_source;
 is(ref $s_artist_result_source,$result_source_class,'slave artist "result_source"');
 

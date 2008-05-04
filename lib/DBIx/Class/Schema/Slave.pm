@@ -3,8 +3,9 @@ package DBIx::Class::Schema::Slave;
 use strict;
 use warnings;
 use base qw/ DBIx::Class /;
+use Clone qw/ clone /;
 
-our $VERSION = '0.01101';
+our $VERSION = '0.02000';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -16,8 +17,10 @@ DBIx::Class::Schema::Slave - L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>
 
 =head1 SYNOPSIS
 
-  # In your MyApp::Schema class
+  # In your MyApp::Schema (DBIx::Class::Schema based)
   package MyApp::Schema;
+
+  use base 'DBIx::Class::Schema';
 
   __PACKAGE__->load_components( qw/ Schema::Slave / );
   __PACKAGE__->slave_moniker('::Slave');
@@ -27,6 +30,33 @@ DBIx::Class::Schema::Slave - L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>
       [ 'dbi:mysql:database:hostname=host', 'username', 'passsword', { ... } ],
       ...,
   ] );
+
+  # As it is now, DBIx::Class::Schema::Slave works out with DBIx::Class::Schema::Loader.
+  # If you use DBIx::Class::Schema::Loader based MyApp::Schema, maybe it is just like below.
+
+  # In your MyApp::Schema (DBIx::Class::Schema::Loader based)
+  package MyApp::Schema;
+
+  use base 'DBIx::Class::Schema::Loader';
+
+  __PACKAGE__->load_components( qw/ Schema::Slave / );
+  __PACKAGE__->slave_moniker('::Slave');
+  __PACKAGE__->slave_connect_info( [
+      [ 'dbi:mysql:database:hostname=host', 'username', 'passsword', { ... } ],
+      [ 'dbi:mysql:database:hostname=host', 'username', 'passsword', { ... } ],
+      [ 'dbi:mysql:database:hostname=host', 'username', 'passsword', { ... } ],
+      ...,
+  ] );
+  __PACKAGE__->loader_options(
+      relationships => 1,
+      components    => [ qw/
+          ...
+          ...
+          ...
+          Row::Slave # DO NOT forget to load
+          Core
+      / ],
+  );
 
   # Somewhere in your code
   use MyApp::Schema;
@@ -59,6 +89,8 @@ First, you should load DBIx::Class::Schema::Slave as component in your MyApp::Sc
   # In your MyApp::Schema
   package MyApp::Schema;
 
+  use base 'DBIx::Class::Schema';
+
   __PACKAGE__->load_components( qw/ Schema::Slave / );
 
 Set L</slave_moniker> as you like.
@@ -78,14 +110,12 @@ Next, you have MyApp::Schema::Artist, MyApp::Schema::Album, MyApp::Schema::Track
 
   __PACKAGE__->load_classes( qw/ Artist Album Track / );
 
-In running L</load_classes>, DBIx::Class::Schema::Slave creates slave C<result_source> classes
+In running L</register_source>, DBIx::Class::Schema::Slave creates slave C<result_source> classes
 MyApp::Schema::Artist::Slave, MyApp::Schema::Album::Slave and MyApp::Schema::Track::Slave automatically.
 If you set C<::MySlave> to L</slave_moniker>, it creates
 MyApp::Schema::Artist::MySlave, MyApp::Schema::Album::MySlave and MyApp::Schema::Track::MySlave.
-If you wouldn't connect to slave, always connect to master,
-you can provide some C<result_source> classes to L</load_classes>.
 
-  # Schema::Artist::Slave wouldn't be created
+  # MyApp::Schema::Artist, MyApp::Schema::Artist::Slave wouldn't be created
   __PACKAGE__->load_classes( qw/ Album Track / );
 
 I recommend every C<result_source> classes to be loaded.
@@ -98,19 +128,52 @@ Next, load L<DBIx::Class::Row::Slave> as component in your C<result_source> clas
   # In your MyApp::Schema::Artist;
   package MyApp::Schema::Artist;
 
+  use base 'DBIx::Class';
+
   __PACKEAGE__->load_components( qw/ ... Row::Slave Core / );
   # Some definitions or methods go on
 
 =head2 Using L<DBIx::Class::Schema::Loader>
 
-DBIx::Class::Schema::Slave B<DOES NOT> work out with L<DBIx::Class::Schema::Loader>.
-At present, you make C<result_source> classes by calling L<DBIx::Class::Schema::Loader/"make_schema_at">
-and load them in your L<DBIx::Class::Schema> based MyApp::Schema.
-Maybe, it will be settled at next version or after the next, or ...
+As it is now, DBIx::Class::Schema::Slave B<WORKS OUT> with L<DBIx::Class::Schema::Loader>.
+First, you should load DBIx::Class::Schema::Slave as component in your MyApp::Schema.
+
+  # In your MyApp::Schema
+  package MyApp::Schema;
+
+  use base 'DBIx::Class::Schema::Loader';
+
+  __PACKAGE__->load_components( qw/ Schema::Slave / );
+
+Set L</slave_moniker> as you like.
+
+  __PACKAGE__->slave_moniker('::Slave');
+
+Set L</slave_connect_info> as C<ARRAYREF> of C<ARRAYREF>.
+
+  __PACKAGE__->slave_connect_info( [
+      [ 'dbi:mysql:database:hostname=host', 'user', 'passsword', { ... } ],
+      [ 'dbi:mysql:database:hostname=host', 'user', 'passsword', { ... } ],
+      [ 'dbi:mysql:database:hostname=host', 'user', 'passsword', { ... } ],
+      ...,
+  ] );
+
+Call L<DBIx::Class::Schema::Loader/loader_options>. B<DO NOT> forget to specify L<DBIx::Class::Row::Slave> as component.
+
+  __PACKAGE__->loader_options(
+      relationships => 1,
+      components    => [ qw/
+          ...
+          ...
+          ...
+          Row::Slave # DO NOT forget to load
+          Core
+      / ],
+  );
 
 =head2 Connecting (Create Schema instance)
 
-To connect your Schema, you provive C<connect_info> for master not for slave.
+To connect your Schema, you provive C<connect_info> not for slave but for master.
 
   my $schema = MyApp::Schema->connect( @master_connect_info );
 
@@ -128,7 +191,7 @@ Retrieving from slave, you should set slave moniker to L</resultset>.
 
 =head2 Adding and removing rows
 
-You can either create a new record or remove some rows from master. But you can neither create a new record nor remove some rows from slave.
+You can either create a new row or remove some rows from master. But you can neither create a new row nor remove some rows from slave.
 
   # These complete normally
   my $track = $schema->resultset('Track')->create( {
@@ -154,21 +217,21 @@ You can either create a new record or remove some rows from master. But you can 
 
   $track->title('TEAM ROCK');
   # You got an error!
-  # DBIx::Class::ResultSet::update(): Can't update via result source "Track::Slave". This is slave connection.
+  # DBIx::Class::Row::Slave::update(): Can't update via result source "Track::Slave". This is slave connection.
   $track->update;
 
   # And, you got an error!
-  # DBIx::Class::ResultSet::delete(): Can't delete via result source "Track::Slave". This is slave connection.
+  # DBIx::Class::Row::Slave::delete(): Can't delete via result source "Track::Slave". This is slave connection.
   $track->delete;
 
-Don't call L<DBIx::Class::ResultSet/"update_all">, L<DBIx::Class::ResultSet/"delete_all"> and L<DBIx::Class::ResultSet/"populate"> via slave C<result_source>s.
-Also you should not call L<DBIx::Class::ResultSet/"find_or_new">, L<DBIx::Class::ResultSet/"find_or_create"> and L<DBIx::Class::ResultSet/"update_or_create"> via slave C<result_source>s.
+B<DO NOT> call L<DBIx::Class::ResultSet/"update_all">, L<DBIx::Class::ResultSet/"delete_all">, L<DBIx::Class::ResultSet/"populate"> and L<DBIx::Class::ResultSet/"update_or_create"> via slave C<result_source>s.
+Also you B<SHOULD NOT> call L<DBIx::Class::ResultSet/"find_or_new">, L<DBIx::Class::ResultSet/"find_or_create"> via slave C<result_source>s.
 
 =head1 CLASS DATA
 
 =head2 slave_moniker
 
-Moniker for slave. C<::Slave> default.
+Moniker suffix for slave. C<::Slave> default.
 
   # In your MyApp::Schema
   __PACKAGE__->slave_moniker('::Slave');
@@ -195,22 +258,16 @@ Connection for slave stored. You can get this by L</slave>.
 
 =head1 METHODS
 
-=head2 load_classes
+=head2 register_source
 
 =over 4
 
-=item Arguments: @classes?, { $namespace => [ @classes ] }+
+=item Arguments: $moniker, $result_source
 
 =back
 
-No C<@classes> provided, this method registers all C<result_source> classes for master and slave.
-If you provide C<@classes>, registers them for master and slave.
-
-  # You have MyApp::Schema::Artist, MyApp::Schema::Album, MyApp::Schema::Track
-  # In your MyApp::Schema
-  __PACKAGE__->load_classes;
-
-Then, this method re-maps C<class_mappings> and C<source_registrations>.
+Registers the L<DBIx::Class::ResultSource> in the schema with the given moniker
+and re-maps C<class_mappings> and C<source_registrations>.
 
   # Re-mapped class_mappings
   class_mappings => {
@@ -250,21 +307,41 @@ Then, this method re-maps C<class_mappings> and C<source_registrations>.
       },
   }
 
-See L<DBIx::Class::Schema/"load_classes">.
+See L<DBIx::Class::Schema/"register_source">.
 
 =cut
 
-sub load_classes {
-    my $class = shift;
+sub register_source {
+    my ( $self, $moniker, $source ) = @_;
 
-    $class->next::method( @_ );
-    foreach my $moniker ( $class->sources ) {
-        my $slave_moniker = $moniker . $class->slave_moniker;
-        $class->source_registrations->{$slave_moniker} =
-            $class->source( $moniker );
-        $class->class_mappings->{$class . $slave_moniker} =
+    $self->next::method( $moniker, $source );
+    unless ( $self->is_slave( $moniker ) ) {
+        my $class = ref $self || $self;
+        my $slave_moniker = $moniker . $self->slave_moniker;
+        my $clone_source  = $self->_clone_source( $source );
+        my $slave_source  = $source->new( $clone_source );
+        $slave_source->source_name( $slave_moniker );
+        $self->next::method( $slave_moniker, $slave_source );
+        $self->class_mappings->{$class . '::' . $moniker} =
+            $moniker;
+        $self->class_mappings->{$class . '::' . $slave_moniker} =
             $slave_moniker;
     }
+}
+
+sub _clone_source {
+    my ( $self, $source ) = @_;
+
+    my $clone_source = clone( $source );
+    foreach my $rel ( keys %{$clone_source->{_relationships}} ) {
+        my $rel_hash = $clone_source->{_relationships}->{$rel};
+        $rel_hash->{source} = $rel_hash->{source} . $self->slave_moniker
+            unless $self->is_slave( $rel_hash->{source} );
+        $rel_hash->{class} = $rel_hash->{class} . $self->slave_moniker
+            unless $self->is_slave( $rel_hash->{class} );
+    }
+
+    return $clone_source;
 }
 
 =head2 resultset
@@ -285,8 +362,7 @@ See L<DBIx::Class::Schema/"resultset">.
 sub resultset {
     my ( $self, $moniker ) = @_;
 
-    my $slave_moniker = $self->slave_moniker;
-    if ( $moniker =~ m/$slave_moniker$/o ) {
+    if ( $self->is_slave( $moniker ) ) {
         ## connect slave
         if ( $self->slave ) {
             ## TODO re-select per not ->resultset('Foo::Slave'), but request.
@@ -427,6 +503,49 @@ and return C<$connect_info> at random from L</slave_connect_info>.
 =cut
 
 sub select_connect_info {}
+
+=head2 is_slave
+
+=over 4
+
+=item Arguments: $string
+
+=item Return Value: 1 or 0
+
+=back
+
+This method returns 1 if C<$string> (moniker, class name and so on) is slave stuff, otherwise returns 0.
+
+  __PACKAGE__->slave_moniker('::Slave');
+
+  # Returns 0
+  $self->is_slave('Artist');
+
+  # Returns 1
+  $self->is_slave('Artist::Slave');
+
+  # Returns 1
+  $self->is_slave('MyApp::Model::DBIC::Artist::Slave');
+
+  __PACKAGE__->slave_moniker('::SlaveFor');
+
+  # Returns 0
+  $self->is_slave('Artist');
+
+  # Returns 1
+  $self->is_slave('Artist::SlaveFor');
+
+  # Returns 1
+  $self->is_slave('MyApp::Model::DBIC::Artist::SlaveFor');
+
+=cut
+
+sub is_slave {
+    my ( $self, $string ) = @_;
+
+    my $match = $self->slave_moniker;
+    return $string =~ m/$match$/o ? 1 : 0;
+}
 
 =head1 INTERNAL METHOD
 

@@ -55,11 +55,15 @@ t/26_page.t
 t/27_new_result.t
 t/28_find_or_new.t
 t/29_create.t
+t/30_find_or_create.t
+t/31_update_or_create.t
+t/32_set_get_clear_cache.t
+t/33_related_resultset.t
+t/34_throw_exception.t
 t/lib/DBICTest.pm
+t/lib/DBICTest/Constants.pm
 t/lib/DBICTest/Schema.pm
 t/lib/DBICTest/Schema/Artist.pm
 t/lib/DBICTest/Schema/CD.pm
 t/lib/DBICTest/Schema/Track.pm
 t/lib/sqlite.sql
-t/pod.t
-t/pod_coverage.t

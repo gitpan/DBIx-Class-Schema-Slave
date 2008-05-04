@@ -17,32 +17,28 @@ my $artist_name = "QURULI";
 my $cd_title = 'Tanz Walzer';
 my $track_title = 'HEILIGENSTADT';
 
-## find from master artist
+## master
 my $m_artist = $schema->resultset('Artist')->find(1);
 is($m_artist->is_slave,0,'master artist "find"');
 is($m_artist->name,$artist_name,'master artist "find"');
 
-## find from master cd
 my $m_cd = $schema->resultset('CD')->find(1);
 is($m_cd->is_slave,0,'master cd "find"');
 is($m_cd->title,$cd_title,'master cd "find"');
 
-## find from master track
 my $m_track = $schema->resultset('Track')->find(1);
 is($m_track->is_slave,0,'master track "find"');
 is($m_track->title,$track_title,'master track "find"');
 
-## find from slave artist
+## slave
 my $s_artist = $schema->resultset('Artist::Slave')->find(1);
 is($s_artist->is_slave,1,'slave artist "find"');
 is($s_artist->name,$artist_name,'slave artist "find"');
 
-## find from slave cd
 my $s_cd = $schema->resultset('CD::Slave')->find(1);
 is($s_cd->is_slave,1,'slave cd "find"');
 is($s_cd->title,$cd_title,'slave cd "find"');
 
-## find from slave track
 my $s_track = $schema->resultset('Track::Slave')->find(1);
 is($s_track->is_slave,1,'slave track "find"');
 is($s_track->title,$track_title,'slave track "find"');

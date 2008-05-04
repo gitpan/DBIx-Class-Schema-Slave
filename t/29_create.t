@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
+use DBICTest::Constants qw/ THROW_EXCEPTION_MESSAGE /;
 
 BEGIN {
     eval "use DBD::SQLite";
@@ -13,9 +14,10 @@ BEGIN {
 }
 
 my $schema = DBICTest->init_schema;
-my $artist   = {artistid=>3,name=>'AIR'};
-my $cd = {cdid => 6,artist => 3,title => 'Nayuta',year => 2008};
-my $track = {trackid => 51,cd => 6,position => 1,title => "Dawning"};
+my $message = THROW_EXCEPTION_MESSAGE;
+my $artist = {artistid=>undef,name=>'DUMMY'};
+my $cd = {cdid => 99,artist => 1,title => 'DUMMY',year => 2008};
+my $track = {trackid => undef,cd => 99,position => 1,title => "1"};
 
 ## master
 my $m_artist = $schema->resultset('Artist')->create($artist);
@@ -33,12 +35,12 @@ is($m_track->title,$track->{title},'master track "create"');
 ## slave
 my $s_artist;
 eval{$s_artist = $schema->resultset('Artist::Slave')->create($artist)};
-like($@,qr/DBIx::Class::ResultSet::create()/,'slave artist "create"');
+like($@,qr/$message/,'slave artist "create"');
 
 my $s_cd;
 eval{$s_cd = $schema->resultset('CD::Slave')->create($cd)};
-like($@,qr/DBIx::Class::ResultSet::create()/,'slave artist "create"');
+like($@,qr/$message/,'slave cd "create"');
 
 my $s_track;
 eval{$s_track = $schema->resultset('Track::Slave')->create($track)};
-like($@,qr/DBIx::Class::ResultSet::create()/,'slave artist "create"');
+like($@,qr/$message/,'slave track "create"');

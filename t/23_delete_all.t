@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
+use DBICTest::Constants qw/ THROW_EXCEPTION_MESSAGE /;
 
 BEGIN {
     eval "use DBD::SQLite";
@@ -14,18 +15,19 @@ BEGIN {
 
 ## slave
 my $schema = DBICTest->init_schema;
+my $message = THROW_EXCEPTION_MESSAGE;
 
 my $itr_s_artist = $schema->resultset('Artist::Slave')->search;
 eval{$itr_s_artist->delete_all};
-like($@,qr/DBIx::Class::ResultSet::delete_all()/,'slave artist "delete_all"');
+like($@,qr/$message/,'slave artist "delete_all"');
 
 my $itr_s_cd = $schema->resultset('CD::Slave')->search;
 eval{$itr_s_cd->delete_all};
-like($@,qr/DBIx::Class::ResultSet::delete_all()/,'slave cd "delete_all"');
+like($@,qr/$message/,'slave cd "delete_all"');
 
 my $itr_s_track = $schema->resultset('Track::Slave')->search;
 eval{$itr_s_track->delete_all};
-like($@,qr/DBIx::Class::ResultSet::delete_all()/,'slave track "delete_all"');
+like($@,qr/$message/,'slave track "delete_all"');
 
 ## master
 

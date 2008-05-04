@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
+use DBICTest::Constants qw/ THROW_EXCEPTION_MESSAGE /;
 
 BEGIN {
     eval "use DBD::SQLite";
@@ -12,45 +13,46 @@ BEGIN {
         : ( tests => 25 );
 }
 
-my @artist = ({artistid => 3,name => 'AIR'});
-my @cd = ({cdid => 6,artist => 3,title => 'Nayuta',year => 2008});
+my $schema = DBICTest->init_schema;
+my $message = THROW_EXCEPTION_MESSAGE;
+my @artist = ({artistid => undef,name => 'DUMMY'});
+my @cd = ({cdid => undef,artist => 1,title => 'DUMMY',year => 2008});
 my @track = (
-    {trackid => 51,cd => 6,position => 1,title => "Dawning"},
-    {trackid => 52,cd => 6,position => 2,title => "Nayuta"},
-    {trackid => 53,cd => 6,position => 3,title => "Janaica"},
-    {trackid => 54,cd => 6,position => 4,title => "Surfriders"},
-    {trackid => 55,cd => 6,position => 5,title => "Holy Sorry"},
-    {trackid => 56,cd => 6,position => 6,title => "Kaze (ninoru)"},
-    {trackid => 57,cd => 6,position => 7,title => "Only Just"},
-    {trackid => 58,cd => 6,position => 8,title => "Have Fun (The Far East mix)"},
-    {trackid => 59,cd => 6,position => 9,title => "Microcosm"},
+    {trackid => undef,cd => 99,position => 1,title => "1"},
+    {trackid => undef,cd => 99,position => 2,title => "2"},
+    {trackid => undef,cd => 99,position => 3,title => "3"},
+    {trackid => undef,cd => 99,position => 4,title => "4"},
+    {trackid => undef,cd => 99,position => 5,title => "5"},
+    {trackid => undef,cd => 99,position => 6,title => "6"},
+    {trackid => undef,cd => 99,position => 7,title => "7"},
+    {trackid => undef,cd => 99,position => 8,title => "8"},
+    {trackid => undef,cd => 99,position => 9,title => "9"},
 );
 
 ## slave
-my $schema = DBICTest->init_schema;
 
 my $s_artist_rs = $schema->resultset('Artist::Slave');
 eval{my $tmp = $s_artist_rs->populate(\@artist)};
-like($@,qr/DBIx::Class::ResultSet::populate()/,'slave artist "populate"');
+like($@,qr/$message/,'slave artist "populate"');
 
 my $s_cd_rs = $schema->resultset('CD::Slave');
 eval{my $tmp = $s_cd_rs->populate(\@cd)};
-like($@,qr/DBIx::Class::ResultSet::populate()/,'slave cd "populate"');
+like($@,qr/$message/,'slave cd "populate"');
 
 my $s_track_rs = $schema->resultset('Track::Slave');
 eval{my $tmp = $s_track_rs->populate( \@track )};
-like($@,qr/DBIx::Class::ResultSet::populate()/,'slave track "populate"');
+like($@,qr/$message/,'slave track "populate"');
 
 ## master
 my $m_artist_rs = $schema->resultset('Artist');
 my ( $m_artist ) = $m_artist_rs->populate(\@artist);
 is($m_artist->is_slave,0,'master artist "populate"');
-is($m_artist->name,'AIR','master artist "populate"');
+is($m_artist->name,'DUMMY','master artist "populate"');
 
 my $m_cd_rs = $schema->resultset('CD');
 my ( $m_cd ) = $m_cd_rs->populate(\@cd);
 is($m_cd->is_slave,0,'master cd "populate"');
-is($m_cd->title,'Nayuta','master cd "populate"');
+is($m_cd->title,'DUMMY','master cd "populate"');
 
 my $m_track_rs = $schema->resultset('Track');
 my ( @m_track ) = $m_track_rs->populate( \@track );

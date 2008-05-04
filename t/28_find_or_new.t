@@ -12,11 +12,10 @@ BEGIN {
         : ( tests => 12 );
 }
 
+my $schema = DBICTest->init_schema;
 my $artist = {artistid => 3,name => 'AIR'};
 my $cd = {cdid => 6,artist => 3,title => 'Nayuta',year => 2008};
 my $track = {trackid => 51,cd => 6,position => 1,title => "Dawning"};
-
-my $schema = DBICTest->init_schema;
 
 ## master
 my $m_artist = $schema->resultset('Artist')->find_or_new($artist);

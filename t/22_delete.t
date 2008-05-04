@@ -4,36 +4,38 @@ use warnings;
 use Test::More;
 use lib qw( t/lib );
 use DBICTest;
+use DBICTest::Constants qw/ THROW_EXCEPTION_MESSAGE /;
 
 BEGIN {
     eval "use DBD::SQLite";
     plan $@
         ? ( skip_all => 'needs DBD::SQLite for testing' )
-        : ( tests => 119 );
+        : ( tests => 364 );
 }
 
 ## slave
 my $schema = DBICTest->init_schema;
+my $message = THROW_EXCEPTION_MESSAGE;
 
 my $itr_s_artist = $schema->resultset('Artist::Slave')->search;
 while ( my $s_artist = $itr_s_artist->next ) {
     is($s_artist->is_slave,1,'slave artist "delete"');
     eval{$s_artist->delete};
-    like($@,qr/DBIx::Class::Row::Slave::delete()/,'slave artist "delete"');
+    like($@,qr/$message/,'slave artist "delete"');
 }
 
 my $itr_s_cd = $schema->resultset('CD::Slave')->search;
 while ( my $s_cd = $itr_s_cd->next ) {
     is($s_cd->is_slave,1,'slave cd "delete"');
     eval{$s_cd->delete};
-    like($@,qr/DBIx::Class::Row::Slave::delete()/,'slave cd "delete"');
+    like($@,qr/$message/,'slave cd "delete"');
 }
 
 my $itr_s_track = $schema->resultset('Track::Slave')->search;
 while ( my $s_track = $itr_s_track->next ) {
     is($s_track->is_slave,1,'slave track "delete"');
     eval{$s_track->delete};
-    like($@,qr/DBIx::Class::Row::Slave::delete()/,'slave track "delete"');
+    like($@,qr/$message/,'slave track "delete"');
 }
 
 ## master

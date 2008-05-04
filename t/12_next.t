@@ -9,12 +9,12 @@ BEGIN {
     eval "use DBD::SQLite";
     plan $@
         ? ( skip_all => 'needs DBD::SQLite for testing' )
-        : ( tests => 114 );
+        : ( tests => 358 );
 }
 
 my $schema = DBICTest->init_schema;
 
-## find from master artist
+## master
 my $m_itr_artist = $schema->resultset('Artist')->search;
 while ( my $m_artist = $m_itr_artist->next ) {
     is($m_artist->is_slave,0,'Test master artist "next"');
@@ -30,7 +30,7 @@ while ( my $m_track = $m_itr_track->next ) {
     is($m_track->is_slave,0,'Test master track "next"');
 }
 
-## find from slave artist
+## slave
 my $s_itr_artist = $schema->resultset('Artist::Slave')->search;
 while ( my $s_artist = $s_itr_artist->next ) {
     is($s_artist->is_slave,1,'Test slave artist "next"');
