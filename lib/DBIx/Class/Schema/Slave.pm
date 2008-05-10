@@ -3,9 +3,9 @@ package DBIx::Class::Schema::Slave;
 use strict;
 use warnings;
 use base qw/ DBIx::Class /;
-use Clone qw/ clone /;
+use Clone qw//;
 
-our $VERSION = '0.02101';
+our $VERSION = '0.02200';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -320,30 +320,31 @@ sub register_source {
     unless ( $self->is_slave( $moniker ) ) {
         my $class = ref $self || $self;
         my $slave_moniker = $moniker . $self->slave_moniker;
-        my $clone_source  = $self->_clone_source( $source );
-        my $slave_source  = $source->new( $clone_source );
-        $slave_source->source_name( $slave_moniker );
-        $self->next::method( $slave_moniker, $slave_source );
+        my $slave_source  = $source->new( $self->_clone_source( $source ) );
         $self->class_mappings->{$class . '::' . $moniker} =
             $moniker;
         $self->class_mappings->{$class . '::' . $slave_moniker} =
             $slave_moniker;
+        $self->next::method( $slave_moniker, $slave_source );
     }
 }
 
 sub _clone_source {
     my ( $self, $source ) = @_;
 
-    my $clone_source = clone( $source );
-    foreach my $rel ( keys %{$clone_source->{_relationships}} ) {
-        my $rel_hash = $clone_source->{_relationships}->{$rel};
-        $rel_hash->{source} = $rel_hash->{source} . $self->slave_moniker
+    my $slave_moniker = $self->slave_moniker;
+    my $clone = Clone::clone( $source );
+    $clone->source_name( $clone->source_name . $slave_moniker );
+    $clone->schema( $self );
+    foreach my $rel ( keys %{$clone->{_relationships}} ) {
+        my $rel_hash = $clone->{_relationships}->{$rel};
+        $rel_hash->{source} = $rel_hash->{source} . $slave_moniker
             unless $self->is_slave( $rel_hash->{source} );
-        $rel_hash->{class} = $rel_hash->{class} . $self->slave_moniker
+        $rel_hash->{class} = $rel_hash->{class} . $slave_moniker
             unless $self->is_slave( $rel_hash->{class} );
     }
 
-    return $clone_source;
+    return $clone;
 }
 
 =head2 resultset

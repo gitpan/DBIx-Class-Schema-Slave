@@ -2,8 +2,6 @@ package DBIx::Class::Row::Slave;
 
 use base qw/ DBIx::Class /;
 
-__PACKAGE__->mk_classdata( slave_moniker => DBIx::Class::Schema::Slave->slave_moniker );
-
 =head1 NAME
 
 DBIx::Class::Row::Slave - L<DBIx::Class::Row> for slave B<(EXPERIMENTAL)>
