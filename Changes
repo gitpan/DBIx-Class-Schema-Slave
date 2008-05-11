@@ -1,5 +1,8 @@
 Revision history for Perl extension DBIx::Class::Schema::Slave
 
+0.02210  Mon May 10 08:15:12 2008
+        - Fixed bug rewrited class_mappings
+
 0.02200  Sat May 10 13:30:18 2008
         - Fixed conflicting between Clone::clone() and DBIx::Class::Schema::clone()
           This bug is included Version 0.02000 - 0.02101

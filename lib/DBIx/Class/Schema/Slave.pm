@@ -5,7 +5,7 @@ use warnings;
 use base qw/ DBIx::Class /;
 use Clone qw//;
 
-our $VERSION = '0.02200';
+our $VERSION = '0.02210';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -319,32 +319,31 @@ sub register_source {
     $self->next::method( $moniker, $source );
     unless ( $self->is_slave( $moniker ) ) {
         my $class = ref $self || $self;
-        my $slave_moniker = $moniker . $self->slave_moniker;
-        my $slave_source  = $source->new( $self->_clone_source( $source ) );
-        $self->class_mappings->{$class . '::' . $moniker} =
-            $moniker;
-        $self->class_mappings->{$class . '::' . $slave_moniker} =
-            $slave_moniker;
-        $self->next::method( $slave_moniker, $slave_source );
+        my $s_moniker = $moniker . $self->slave_moniker;
+        my $s_source  = $source->new( $self->_clone_source( $source ) );
+        $self->next::method( $s_moniker, $s_source );
+        $self->class_mappings->{"$class\::$s_moniker"} = $s_moniker;
+        $self->class_mappings->{"$class\::$moniker"} = $moniker;
     }
 }
 
 sub _clone_source {
     my ( $self, $source ) = @_;
 
-    my $slave_moniker = $self->slave_moniker;
-    my $clone = Clone::clone( $source );
-    $clone->source_name( $clone->source_name . $slave_moniker );
-    $clone->schema( $self );
-    foreach my $rel ( keys %{$clone->{_relationships}} ) {
-        my $rel_hash = $clone->{_relationships}->{$rel};
-        $rel_hash->{source} = $rel_hash->{source} . $slave_moniker
+    my $s_moniker = $self->slave_moniker;
+    my $c_source  = Clone::clone( $source );
+    my $srs_class = $c_source->result_class . $self->slave_moniker;
+    $c_source->source_name( $c_source->source_name . $s_moniker );
+    $c_source->schema( $self );
+    foreach my $rel ( keys %{$c_source->{_relationships}} ) {
+        my $rel_hash = $c_source->{_relationships}->{$rel};
+        $rel_hash->{source} = $rel_hash->{source} . $s_moniker
             unless $self->is_slave( $rel_hash->{source} );
-        $rel_hash->{class} = $rel_hash->{class} . $slave_moniker
+        $rel_hash->{class} = $rel_hash->{class} . $s_moniker
             unless $self->is_slave( $rel_hash->{class} );
     }
 
-    return $clone;
+    return $c_source;
 }
 
 =head2 resultset
@@ -427,12 +426,7 @@ This method returns the sorted alphabetically master source monikers of all sour
 
 =cut
 
-sub master_sources {
-    my $self = shift;
-
-    my $slave_moniker = $self->slave_moniker;
-    return grep { $_ !~ m/$slave_moniker$/o } $self->sources;
-}
+sub master_sources { grep { !$_[0]->is_slave( $_ ) } $_[0]->sources }
 
 =head2 slave_sources
 
@@ -450,12 +444,7 @@ This method returns the sorted alphabetically slave source monikers of all sourc
 
 =cut
 
-sub slave_sources {
-    my $self = shift;
-
-    my $slave_moniker = $self->slave_moniker;
-    return grep { $_ =~ m/$slave_moniker$/o } $self->sources;
-}
+sub slave_sources { grep { $_[0]->is_slave( $_ ) } $_[0]->sources }
 
 =head2 connect_slave
 
