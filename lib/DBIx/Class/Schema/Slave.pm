@@ -5,7 +5,7 @@ use warnings;
 use base qw/ DBIx::Class /;
 use Clone qw//;
 
-our $VERSION = '0.02210';
+our $VERSION = '0.02300';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
@@ -316,15 +316,12 @@ See L<DBIx::Class::Schema/"register_source">.
 sub register_source {
     my ( $self, $moniker, $source ) = @_;
 
-    $self->next::method( $moniker, $source );
     unless ( $self->is_slave( $moniker ) ) {
-        my $class = ref $self || $self;
         my $s_moniker = $moniker . $self->slave_moniker;
         my $s_source  = $source->new( $self->_clone_source( $source ) );
         $self->next::method( $s_moniker, $s_source );
-        $self->class_mappings->{"$class\::$s_moniker"} = $s_moniker;
-        $self->class_mappings->{"$class\::$moniker"} = $moniker;
     }
+    $self->next::method( $moniker, $source );
 }
 
 sub _clone_source {
@@ -332,18 +329,37 @@ sub _clone_source {
 
     my $s_moniker = $self->slave_moniker;
     my $c_source  = Clone::clone( $source );
-    my $srs_class = $c_source->result_class . $self->slave_moniker;
-    $c_source->source_name( $c_source->source_name . $s_moniker );
-    $c_source->schema( $self );
-    foreach my $rel ( keys %{$c_source->{_relationships}} ) {
-        my $rel_hash = $c_source->{_relationships}->{$rel};
-        $rel_hash->{source} = $rel_hash->{source} . $s_moniker
-            unless $self->is_slave( $rel_hash->{source} );
-        $rel_hash->{class} = $rel_hash->{class} . $s_moniker
-            unless $self->is_slave( $rel_hash->{class} );
+    $self->_slave_relationships( $c_source );
+
+    if ( ref $self ) {
+        no strict 'refs';
+        no warnings 'redefine';
+        local *Class::C3::reinitialize = sub {};
+        my $s_result_class = $c_source->result_class . $s_moniker;
+        ## Set VERSION to create pseudo namespace.
+        local ${"${s_result_class}::VERSION"} ||= 1;
+        $self->inject_base( $s_result_class => $source->result_class );
+        $c_source->result_class( $s_result_class );
     }
 
     return $c_source;
+}
+
+sub _slave_relationships {
+    my ( $self, $source ) = @_;
+
+    my $s_moniker = $self->slave_moniker;
+    my %rels = %{$source->_relationships};
+    return unless %rels;
+
+    foreach my $rel ( keys %rels ) {
+        $rels{$rel}->{source} = $rels{$rel}->{source} . $s_moniker
+            unless $self->is_slave( $rels{$rel}->{source} );
+        $rels{$rel}->{class} = $rels{$rel}->{class} . $s_moniker
+            unless $self->is_slave( $rels{$rel}->{class} );
+    }
+
+    $source->_relationships( \%rels );
 }
 
 =head2 resultset

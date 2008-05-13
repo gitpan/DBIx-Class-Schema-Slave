@@ -56,7 +56,6 @@ sub _database {
     my $dbpass = $ENV{"DBICTEST_DBPASS"} || '';
 
     my @connect_info = ($dsn, $dbuser, $dbpass, { AutoCommit => 1 });
-    use Data::Dumper;
 
     return @connect_info;
 }
