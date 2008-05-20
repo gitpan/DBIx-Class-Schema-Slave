@@ -1,12 +1,18 @@
 Revision history for Perl extension DBIx::Class::Schema::Slave
 
+0.02400
+        - Added CAUTION heading.
+        - Changed DBIx::Class::Schema::Slave::slave_connection to
+          DBIx::Class::Schema::Slave::slave_schema.
+        - Changed DBIx::Class::Schema::Slave::connect_slave to
+          DBIx::Class::Schema::Slave::slave_connect.
+
 0.02300  Wed May 14 02:12:48 2008
-        - Delgated mapping class_mappings, source_registrations to
-          DBIx::Class::Schema::register_source. DBIx::Class::Schema::Slave
-          creates slave $source.
-        - Modified DBIx::Class::Schema::Slave::_slave_relationships
+        - Delgated mapping class_mappings and source_registrations to
+          DBIx::Class::Schema::register_source.
+        - Added method DBIx::Class::Schema::Slave::_slave_relationships
         - Tweaked tests (t/06_search_related.t, t/33_related_resultset.t)
-          Testing to resolve reverse relationship
+          Testing to resolve reverse relationships
 
 0.02210  Mon May 10 08:15:12 2008
         - Fixed bug rewrited class_mappings

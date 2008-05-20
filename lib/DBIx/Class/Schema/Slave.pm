@@ -5,15 +5,39 @@ use warnings;
 use base qw/ DBIx::Class /;
 use Clone qw//;
 
-our $VERSION = '0.02300';
+our $VERSION = '0.02400';
 
 __PACKAGE__->mk_classdata( slave_moniker => '::Slave' );
+__PACKAGE__->mk_classdata('slave_schema');
 __PACKAGE__->mk_classdata('slave_connect_info' => [] );
-__PACKAGE__->mk_classdata('slave_connection');
+
+## TODO remove next major release
+sub slave_connection {
+    my $self = shift;
+    warn "DBIx::Class::Schema::Slave::slave_connection is changed to " .
+        "DBIx::Clas::Schema::Slave::slave_schema. " .
+        "This message will be removed next major release.";
+    return $self->slave_schema;
+}
+
+## TODO remove next major release
+sub connect_slave {
+    my $self = shift;
+    warn "DBIx::Class::Schema::Slave::connect_slave was changed to " .
+        "DBIx::Class::Schema::Slave::slave_connect. " .
+        "This message will be removed next major release.";
+    return $self->slave_connect( @_ );
+}
 
 =head1 NAME
 
 DBIx::Class::Schema::Slave - L<DBIx::Class::Schema> for slave B<(EXPERIMENTAL)>
+
+=head1 CAUTION
+
+DIBx::Class::Schema::Slave is B<EXPERIMENTAL> and B<DO NOT> use.
+Please check L<DBIx::Class::Storage::DBI::Replicated> or L<DBIx::Class::Storage::DBI::Replication>.
+DBIx::Class::Schema::Slave will be deleted.
 
 =head1 SYNOPSIS
 
@@ -84,7 +108,7 @@ but you can neither add nor remove rows from slave.
 
 =head2 Setting it up manually
 
-First, you should load DBIx::Class::Schema::Slave as component in your MyApp::Schema.
+First, load DBIx::Class::Schema::Slave as component in your MyApp::Schema.
 
   # In your MyApp::Schema
   package MyApp::Schema;
@@ -136,7 +160,7 @@ Next, load L<DBIx::Class::Row::Slave> as component in your C<result_source> clas
 =head2 Using L<DBIx::Class::Schema::Loader>
 
 As it is now, DBIx::Class::Schema::Slave B<WORKS OUT> with L<DBIx::Class::Schema::Loader>.
-First, you should load DBIx::Class::Schema::Slave as component in your MyApp::Schema.
+First, load DBIx::Class::Schema::Slave as component in your MyApp::Schema.
 
   # In your MyApp::Schema
   package MyApp::Schema;
@@ -164,8 +188,6 @@ Call L<DBIx::Class::Schema::Loader/loader_options>. B<DO NOT> forget to specify 
       relationships => 1,
       components    => [ qw/
           ...
-          ...
-          ...
           Row::Slave # DO NOT forget to load
           Core
       / ],
@@ -173,7 +195,7 @@ Call L<DBIx::Class::Schema::Loader/loader_options>. B<DO NOT> forget to specify 
 
 =head2 Connecting (Create Schema instance)
 
-To connect your Schema, you provive C<connect_info> not for slave but for master.
+To connect your Schema, provive C<connect_info> not for slave but for master.
 
   my $schema = MyApp::Schema->connect( @master_connect_info );
 
@@ -184,7 +206,7 @@ Retrieving from master, you don't have to care about anything.
   my $album_master     = $schema->resultset('Album')->find( $id );
   my $itr_album_master = $schema->resultset('Album')->search( { ... }, { ... } );
 
-Retrieving from slave, you should set slave moniker to L</resultset>.
+Retrieving from slave, set slave moniker to L</resultset>.
 
   my $track_slave     = $schema->resultset('Album::Slave')->find( $id );
   my $itr_track_slave = $schema->resultset('Album::Slave')->search( { ... }, { ... } );
@@ -252,9 +274,9 @@ C<connect_info>s C<ARRAYREF> of C<ARRAYREF> for slave.
       ...,
   ] );
 
-=head2 slave_connection
+=head2 slave_schema
 
-Connection for slave stored. You can get this by L</slave>.
+Schema for slave. You can get this by L</slave>.
 
 =head1 METHODS
 
@@ -321,6 +343,7 @@ sub register_source {
         my $s_source  = $source->new( $self->_clone_source( $source ) );
         $self->next::method( $s_moniker, $s_source );
     }
+
     $self->next::method( $moniker, $source );
 }
 
@@ -389,7 +412,7 @@ sub resultset {
             ## TODO re-select per not ->resultset('Foo::Slave'), but request.
             $self->slave->storage->connect_info( $self->_select_connect_info );
         } else {
-            $self->connect_slave( @{$self->_select_connect_info} );
+            $self->slave_connect( @{$self->_select_connect_info} );
         }
         ## TODO more tidily
         $self->slave->storage->debug( $self->storage->debug );
@@ -462,7 +485,7 @@ This method returns the sorted alphabetically slave source monikers of all sourc
 
 sub slave_sources { grep { $_[0]->is_slave( $_ ) } $_[0]->sources }
 
-=head2 connect_slave
+=head2 slave_connect
 
 =over 4
 
@@ -472,22 +495,21 @@ sub slave_sources { grep { $_[0]->is_slave( $_ ) } $_[0]->sources }
 
 =back
 
-This method creates slave connection, and store it in C<slave_connection>. You can get this by L</slave>.
+This method creates slave connection, and store it in C<slave_schema>. You can get this by L</slave>.
 Usualy, you don't have to call it directry.
 
 =cut
 
-sub connect_slave { $_[0]->slave_connection( shift->connect( @_ ) ) }
+sub slave_connect { $_[0]->slave_schema( shift->connect( @_ ) ) }
 
 =head2 slave
 
-Getter for L</slave_connection>. You can get schema for slave if it stored in L</slave_connection>.
+Getter for L</slave_schema>. You can get schema for slave if it stored in L</slave_schema>.
 
   my $slave_schema = $schema->slave;
 
 =cut
 
-#*slave = \&DBIx::Class::Slave::slave_connection;
 sub slave { shift->slave_connection }
 
 =head2 select_connect_info
@@ -501,7 +523,7 @@ sub slave { shift->slave_connection }
 =back
 
 You can define this method in your schema class as you like. This method has to return C<$connect_info> as C<ARRAYREF>.
-If L</select_connect_info> returns C<undef> or undef value or not C<ARRAYREF>, L</_select_connect_info> will be called,
+If L</select_connect_info> returns C<undef>, undef value or not C<ARRAYREF>, L</_select_connect_info> will be called,
 and return C<$connect_info> at random from L</slave_connect_info>.
 
   # In your MyApp::Schame
@@ -582,15 +604,35 @@ See L</select_connect_info> for more information.
 sub _select_connect_info {
     my $self = shift;
 
-     my $info = $self->can('select_connect_info')
-             && $self->select_connect_info
-             && ref $self->select_connect_info eq 'ARRAY'
-          ? $self->select_connect_info
-          : $self->slave_connect_info->[ rand @{$self->slave_connect_info} ];
-           
-#      warn "Select slave_connect_info @{$info}\n";
-      return $info;
+    my $info = ( $self->can('select_connect_info')
+                 && $self->select_connect_info
+                 && ref $self->select_connect_info eq 'ARRAY' )
+        ? $self->select_connect_info
+        : $self->slave_connect_info->[ rand @{$self->slave_connect_info} ];
+
+#    warn "Select slave_connect_info $info";
+    return $info;
 }
+
+# sub _dbd_multi {
+#     my $self = shift;
+
+#     my @connect_info  = @{$self->slave_connect_info};
+#     my $dbd_multi_opt = ref $connect_info[-1] eq 'HASH' ?
+#         pop @connect_info : {};
+#     $dbd_multi_opt->{limit_dialect} = $self->storage->sql_maker->limit_dialect
+#         unless defined $dbd_multi_opt->{limit_dialect};
+
+#     @connect_info = map {
+#         my $dsn = ref $_->[0] ? $_->[0] : $_;
+#         my $pri = ( ref $_->[-1] && $_->[-1]->{priority} ) ?
+#             $_->[-1]->{priority} : 10;
+#         $pri => $dsn;
+#     } @connect_info;
+
+#     return [ 'dbi:Multi:', undef, undef,
+#             { dsns => \@connect_info, %$dbd_multi_opt } ];
+# }
 
 =head1 AUTHOR
 
